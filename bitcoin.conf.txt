@@ -1,0 +1,15 @@
+# Mainnet
+server=1
+rpcuser=brnuser
+rpcpassword=SUA_SENHA_FORTE_AQUI
+rpcallowip=127.0.0.1
+rpcbind=127.0.0.1
+rpcport=8332
+
+# Modo pruned (não baixa blockchain inteira)
+prune=5500
+txindex=1
+wallet=brn_bridge
+
+# Debug
+debug=rpc

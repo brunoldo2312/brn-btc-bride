@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carteira BRN P2P</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: Arial, sans-serif;
+    background: #020617;
+    color: #f8fafc;
+    padding: 20px;
+    margin: 0;
+  }
+  .container { max-width: 720px; margin: 0 auto; }
+  h1 { color: #38bdf8; text-align: center; }
+  h2 { color: #e2e8f0; font-size: 1.1rem; }
+
+  button {
+    padding: 10px 16px;
+    background: #0284c7;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    margin: 5px 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    transition: transform .08s ease, background .15s ease;
+  }
+  button:hover { background: #0369a1; }
+  button:active { transform: scale(.97); }
+  button:disabled { background: #475569; cursor: not-allowed; }
+  button.perigo { background: #b91c1c; }
+  button.perigo:hover { background: #991b1b; }
+  button.ok { background: #059669; }
+  button.ok:hover { background: #047857; }
+
+  input, select {
+    padding: 10px;
+    margin: 5px 0 15px 0;
+    border-radius: 5px;
+    border: 1px solid #334155;
+    background: #1e293b;
+    color: #f8fafc;
+    width: 100%;
+    font-family: monospace;
+  }
+  label {
+    display: block;
+    color: #94a3b8;
+    font-size: 0.9rem;
+    margin-top: 10px;
+  }
+  .box {
+    background: #0f172a;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #1e293b;
+  }
+
+  #walletAddress { color: #64748b; margin-left: 10px; }
+  #statusConexao { color: #f87171; }
+
+  /* ---------- CARD DE DESTAQUE: ENDEREÇO BRN ---------- */
+  .card-endereco {
+    background: linear-gradient(135deg, #052e2b 0%, #0f172a 100%);
+    border: 2px solid #04d361;
+    border-radius: 12px;
+    padding: 22px;
+    margin-bottom: 20px;
+    box-shadow: 0 0 24px rgba(4, 211, 97, 0.25);
+    position: relative;
+  }
+  .card-endereco .tag {
+    position: absolute;
+    top: -12px;
+    left: 20px;
+    background: #04d361;
+    color: #052e2b;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    padding: 4px 12px;
+    border-radius: 20px;
+    text-transform: uppercase;
+  }
+  .card-endereco h2 {
+    color: #04d361;
+    margin: 4px 0 14px 0;
+    font-size: 1.05rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .endereco-display {
+    background: #020617;
+    border: 1px dashed #04d361;
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-family: "Consolas", monospace;
+    font-size: 1rem;
+    color: #7CFFB2;
+    word-break: break-all;
+    line-height: 1.4;
+    margin-bottom: 14px;
+    user-select: all;
+  }
+  .endereco-display.vazio { color: #64748b; font-style: italic; }
+
+  .linha-botoes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+  }
+
+  button.btn-copiar {
+    background: #04d361;
+    color: #052e2b;
+    font-weight: 800;
+    font-size: 1rem;
+    padding: 12px 22px;
+    border-radius: 8px;
+    box-shadow: 0 4px 14px rgba(4, 211, 97, 0.45);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  button.btn-copiar:hover { background: #03b552; }
+  button.btn-copiar.copiado {
+    background: #059669;
+    color: #fff;
+    animation: pulse-verde .6s ease;
+  }
+  @keyframes pulse-verde {
+    0%   { box-shadow: 0 0 0 0   rgba(4, 211, 97, 0.7); }
+    70%  { box-shadow: 0 0 0 14px rgba(4, 211, 97, 0);  }
+    100% { box-shadow: 0 0 0 0   rgba(4, 211, 97, 0);  }
+  }
+
+  .toast-copiado {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #04d361;
+    color: #052e2b;
+    font-weight: 800;
+    padding: 14px 26px;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.5);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s ease, transform .25s ease;
+    z-index: 9999;
+  }
+  .toast-copiado.mostrar {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  #qrcode {
+    display: flex;
+    justify-content: center;
+    margin: 10px 0 0 0;
+  }
+  #qrcode img {
+    background: #fff;
+    padding: 8px;
+    border-radius: 8px;
+  }
+
+  .saldo {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    background: #1e293b;
+    border-radius: 5px;
+    margin: 5px 0;
+  }
+  .saldo strong { color: #38bdf8; }
+
+  .aviso {
+    background: #fef3c7;
+    color: #78350f;
+    padding: 10px;
+    border-radius: 5px;
+    margin: 10px 0;
+    font-size: 0.9rem;
+    display: none;
+  }
+  .aviso.erro { background: #fee2e2; color: #7f1d1d; }
+  .aviso.ok { background: #d1fae5; color: #064e3b; }
+  .aviso.visivel { display: block; }
+
+  /* Mural */
+  .ordem {
+    background: #202024;
+    border: 1px solid #29292e;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    text-align: left;
+  }
+</style>
+</head>
+<body>
+
+<div id="toastCopiado" class="toast-copiado">✅ Endereço copiado!</div>
+
+<div class="container">
+  <h1>Carteira BRN P2P</h1>
+
+  <!-- Painel Conexão -->
+  <div class="box">
+    <button onclick="conectarCarteira()">Conectar Carteira</button>
+    <span id="walletAddress">Desconectado</span><br><br>
+    <span id="statusConexao">Sincronizador P2P: OFFLINE</span>
+  </div>
+
+  <!-- ⭐ CARD EM DESTAQUE: ENDEREÇO BRN ⭐ -->
+  <div class="card-endereco">
+    <span class="tag">Sua Carteira BRN</span>
+    <h2>📥 Receber BRN neste endereço</h2>
+
+    <div id="meuEndereco" class="endereco-display vazio">
+      Conecte a carteira para ver seu endereço...
+    </div>
+
+    <div class="linha-botoes">
+      <button id="btnCopiarEndereco" class="btn-copiar" onclick="copiarEndereco()">
+        📋 COPIAR ENDEREÇO
+      </button>
+      <button onclick="compartilharEndereco()">🔗 Compartilhar</button>
+      <button onclick="toggleQR()">📱 Mostrar QR Code</button>
+    </div>
+
+    <div id="qrcode" style="display:none;"></div>
+  </div>
+
+  <!-- Saldos -->
+  <div class="box">
+    <h2>Meus Saldos</h2>
+    <div class="saldo"><span>BRN:</span><strong id="saldoBRN">--</strong></div>
+    <div class="saldo"><span>USDC:</span><strong id="saldoUSDT">--</strong></div>
+    <div class="saldo"><span>POL (gas):</span><strong id="saldoPOL">--</strong></div>
+    <button onclick="carregarSaldos()">Atualizar Saldos</button>
+  </div>
+
+  <!-- Enviar BRN -->
+  <div class="box">
+    <h2>Enviar BRN com Segurança</h2>
+    <label>Endereço de destino:</label>
+    <input id="destinoInput" placeholder="0x..." type="text">
+    <label>Quantidade de BRN:</label>
+    <input id="valorEnvioInput" type="number" placeholder="Ex: 10" step="0.0001">
+    <div id="avisoTransferencia" class="aviso"></div>
+    <button class="ok" onclick="iniciarTransferencia()">Validar e Enviar</button>
+  </div>
+
+  <!-- Criar Ordem P2P -->
+  <div class="box">
+    <h2>Criar Ordem de Troca P2P</h2>
+    <label>Token que você oferece:</label>
+    <select id="tokenOferecidoSelect"><option value="BRN">BRN</option></select>
+    <label>Token que você quer receber:</label>
+    <select id="tokenDesejadoSelect"><option value="USDC">USDC</option></select>
+    <label>Quantidade oferecida (BRN):</label>
+    <input id="valorOferecidoInput" type="number" placeholder="Ex: 100" step="0.01">
+    <label>Quantidade desejada (USDC):</label>
+    <input id="valorDesejadoInput" type="number" placeholder="Ex: 50" step="0.01">
+    <button onclick="gerarContratoAutomatico(this)">Criar Ordem On-Chain</button>
+  </div>
+
+  <!-- Mural -->
+  <div class="box">
+    <h2>Mural de Ordens</h2>
+    <div id="muralOrdens">
+      <p style="color:#94a3b8;">Nenhuma ordem ativa no momento.</p>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
